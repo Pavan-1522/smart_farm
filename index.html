@@ -4,506 +4,1095 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aqua-AI Smart Farm Dashboard</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
         :root {
-            --primary-green: #1b5e20;
-            --secondary-green: #2e7d32;
-            --light-bg: #f0f4f1;
-            --card-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            --forest: #0d3d1e;
+            --leaf: #1a6b33;
+            --sage: #2d9e52;
+            --mint: #4ecb71;
+            --lime: #a3e635;
+            --soil: #5c3b1e;
+            --clay: #8b5e3c;
+            --sky: #0ea5e9;
+            --sun: #f59e0b;
+            --fire: #ef4444;
+            --night: #1e1b4b;
+            --bg: #f0f7f2;
+            --card: #ffffff;
+            --text: #0d1f12;
+            --muted: #6b7c71;
+            --border: #d4e8db;
+            --shadow: 0 4px 24px rgba(13,61,30,0.08);
+            --shadow-lg: 0 12px 40px rgba(13,61,30,0.14);
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--light-bg);
-            color: #2d3748;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
 
-        /* Navbar Styling */
+        /* ── NAVBAR ── */
         .navbar {
-            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
-            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
-            padding: 1rem 0;
+            background: var(--forest);
+            padding: 0 1.5rem;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.25);
         }
-
         .navbar-brand {
-            font-size: 1.4rem;
-            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
         }
-
-        /* Card Enhancements */
-        .card {
-            border: none;
-            border-radius: 20px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #ffffff;
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-
-        .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.1);
-        }
-
-        .card-header-title {
-            font-weight: 700;
-            color: #1a202c;
-            border-bottom: 2px solid #edf2f7;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-        }
-
-        /* Metric Circles */
-        .icon-circle {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
+        .brand-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--mint), var(--lime));
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            color: white;
-            margin-bottom: 18px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            font-size: 1.1rem;
+            color: var(--forest);
+            font-weight: 900;
+            flex-shrink: 0;
         }
-        
-        .bg-temp { background: linear-gradient(135deg, #FF9800, #F57C00); }
-        .bg-hum { background: linear-gradient(135deg, #03A9F4, #0288D1); }
-        .bg-soil { background: linear-gradient(135deg, #8D6E63, #5D4037); }
-        .bg-stat { background: linear-gradient(135deg, #9C27B0, #7B1FA2); }
+        .brand-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.15rem; color: #fff; line-height: 1; }
+        .brand-sub { font-size: 0.7rem; color: rgba(255,255,255,0.5); font-weight: 400; letter-spacing: 1px; text-transform: uppercase; }
 
-        .value-text {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: #2d3748;
-            line-height: 1.2;
-        }
+        .nav-right { display: flex; align-items: center; gap: 0.75rem; flex-wrap: nowrap; }
 
-        .metric-label {
-            font-size: 0.95rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #718096;
-        }
-
-        /* List Styling */
-        .list-group-item {
-            border-color: #f1f5f9;
-            padding: 1rem 0.5rem;
-            font-weight: 500;
-        }
-
-        /* Badges */
-        .badge {
-            padding: 0.5em 0.8em;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        /* Phone Editor */
-        .phone-display {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 6px 16px;
+        .phone-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 0.4rem 0.85rem;
             border-radius: 50px;
             cursor: pointer;
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 500;
             transition: background 0.2s;
-            border: 1px solid rgba(255,255,255,0.3);
+            white-space: nowrap;
         }
-        .phone-display:hover {
-            background: rgba(255, 255, 255, 0.25);
+        .phone-chip:hover { background: rgba(255,255,255,0.15); }
+        .phone-chip .edit-icon { font-size: 0.65rem; opacity: 0.6; }
+
+        .lang-select {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 0.4rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            outline: none;
+        }
+        .lang-select option { background: var(--forest); color: #fff; }
+
+        /* ── MAIN LAYOUT ── */
+        .main-content { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+
+        /* ── EMERGENCY BANNER ── */
+        .emergency-banner {
+            display: none;
+            background: linear-gradient(135deg, #7f1d1d, #dc2626);
+            color: #fff;
+            padding: 0.9rem 1.5rem;
+            border-radius: 14px;
+            margin-bottom: 1.5rem;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-align: center;
+            letter-spacing: 0.5px;
+            animation: pulseBanner 1.8s ease-in-out infinite;
+            box-shadow: 0 0 0 0 rgba(220,38,38,0.4);
+        }
+        .emergency-banner.active { display: block; }
+        @keyframes pulseBanner {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
+            50% { box-shadow: 0 0 0 12px rgba(220,38,38,0); }
         }
 
-        /* Alert Animations */
-        @keyframes pulseRed {
-            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        /* ── CROP SELECTOR PANEL ── */
+        .crop-panel {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
-        .alert-danger-pulse {
-            animation: pulseRed 1.5s infinite;
-            border: 2px solid #dc3545 !important;
+        .crop-panel-label {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--forest);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .crop-select-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+        .crop-select {
+            width: 100%;
+            appearance: none;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 0.65rem 2.5rem 0.65rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .crop-select:focus { border-color: var(--sage); }
+        .crop-select-arrow {
+            position: absolute;
+            right: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--muted);
+            font-size: 0.75rem;
         }
 
-        /* Toast Container */
+        .save-crop-btn {
+            background: linear-gradient(135deg, var(--leaf), var(--sage));
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 0.65rem 1.4rem;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+        .save-crop-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,107,51,0.3); }
+        .save-crop-btn:active { transform: translateY(0); }
+
+        /* Crop ideal info pills */
+        .crop-ideal-strip {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            width: 100%;
+        }
+        .ideal-pill {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 0.35rem 0.85rem;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .ideal-pill .pill-icon { font-size: 0.75rem; }
+        .ideal-pill .pill-label { color: var(--muted); }
+        .ideal-pill .pill-val { font-weight: 600; color: var(--leaf); }
+        .ideal-pill.season-pill .pill-val { color: var(--sun); }
+        .crop-ideal-strip.hidden { display: none; }
+
+        /* ── METRIC CARDS ── */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .metric-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 1.4rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: 20px 20px 0 0;
+        }
+        .metric-card.temp::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+        .metric-card.hum::before { background: linear-gradient(90deg, #0ea5e9, #06b6d4); }
+        .metric-card.soil::before { background: linear-gradient(90deg, #8b5e3c, #a16207); }
+        .metric-card.pump::before { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+        .metric-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+        .metric-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .metric-icon {
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .metric-icon.temp { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+        .metric-icon.hum { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+        .metric-icon.soil { background: linear-gradient(135deg, #8b5e3c, #713f12); }
+        .metric-icon.pump { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+
+        .metric-status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
+            animation: dotPulse 2s infinite;
+        }
+        @keyframes dotPulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+            50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+        }
+
+        .metric-value {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 2.2rem;
+            line-height: 1;
+            color: var(--text);
+        }
+        .metric-unit { font-size: 1rem; font-weight: 400; color: var(--muted); }
+        .metric-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+        }
+        .metric-ideal {
+            font-size: 0.72rem;
+            color: var(--sage);
+            font-weight: 500;
+            background: rgba(45,158,82,0.1);
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            width: fit-content;
+        }
+        .metric-ideal.hidden { display: none; }
+
+        /* Status badge inside pump card */
+        .pump-badge {
+            display: inline-block;
+            padding: 0.4rem 1.2rem;
+            border-radius: 50px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-top: 0.2rem;
+        }
+        .pump-badge.on { background: rgba(16,185,129,0.12); color: #059669; }
+        .pump-badge.off { background: rgba(107,114,128,0.1); color: #6b7280; }
+
+        /* ── DETAIL PANELS ── */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .panel {
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 1.1rem 1.4rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .panel-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+        .panel-body { padding: 0.5rem 0; }
+
+        .sensor-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 1.4rem;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        .sensor-row:last-child { border-bottom: none; }
+        .sensor-row:hover { background: var(--bg); }
+        .sensor-label {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--muted);
+        }
+        .sensor-label i { width: 18px; text-align: center; }
+        .sensor-val { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+        .sensor-val.live-num { color: var(--sky); }
+
+        /* Badge styles */
+        .badge {
+            padding: 0.3rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .badge.safe { background: rgba(16,185,129,0.1); color: #059669; }
+        .badge.danger { background: rgba(239,68,68,0.1); color: #dc2626; animation: badgePulse 1.2s infinite; }
+        .badge.warn { background: rgba(245,158,11,0.1); color: #d97706; }
+        .badge.info { background: rgba(14,165,233,0.12); color: #0284c7; }
+        .badge.dark { background: rgba(30,27,75,0.08); color: var(--night); }
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
+            50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+        }
+
+        /* ── HARDWARE STATUS ── */
+        .hw-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+        .hw-item {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            text-align: center;
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .hw-item:nth-child(even) { border-right: none; }
+        .hw-item:last-child, .hw-item:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+        .hw-icon {
+            font-size: 2.2rem;
+            transition: color 0.3s;
+        }
+        .hw-icon.sun { color: var(--sun); }
+        .hw-icon.moon { color: #818cf8; }
+        .hw-icon.horn-off { color: var(--muted); }
+        .hw-icon.horn-on { color: var(--fire); animation: hornShake 0.4s infinite; }
+        @keyframes hornShake {
+            0%,100% { transform: rotate(0deg); }
+            25% { transform: rotate(-8deg); }
+            75% { transform: rotate(8deg); }
+        }
+        .hw-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
+
+        /* ── TOAST ── */
         #toast-container {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1055;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 0.6rem;
+        }
+        .toast-item {
+            padding: 0.85rem 1.2rem;
+            border-radius: 14px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            min-width: 260px;
+            max-width: 360px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            animation: slideUp 0.3s ease;
+            cursor: pointer;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-item.success { background: #064e3b; color: #a7f3d0; }
+        .toast-item.danger { background: #7f1d1d; color: #fecaca; }
+        .toast-item.warning { background: #78350f; color: #fef3c7; }
+        .toast-item.info { background: #0c4a6e; color: #bae6fd; }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal-box {
+            background: var(--card);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.2);
+            transform: translateY(20px);
+            transition: transform 0.25s;
+            overflow: hidden;
+        }
+        .modal-overlay.open .modal-box { transform: translateY(0); }
+        .modal-head {
+            background: var(--forest);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-head-title { font-family: 'Syne', sans-serif; font-weight: 700; color: #fff; font-size: 1rem; }
+        .modal-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            width: 30px; height: 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.2); }
+        .modal-body { padding: 1.5rem; }
+        .modal-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem; line-height: 1.5; }
+        .phone-input-group {
+            display: flex;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .phone-input-group:focus-within { border-color: var(--sage); }
+        .phone-prefix {
+            background: var(--bg);
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            color: var(--leaf);
+            border-right: 2px solid var(--border);
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+        .phone-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 0.75rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            background: transparent;
+        }
+        .phone-error { color: var(--fire); font-size: 0.8rem; margin-top: 0.5rem; display: none; }
+        .modal-foot {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+        .btn-cancel {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-cancel:hover { background: var(--border); }
+        .btn-save {
+            background: linear-gradient(135deg, var(--leaf), var(--sage));
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.4rem;
+            border-radius: 10px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-save:hover { box-shadow: 0 4px 16px rgba(26,107,51,0.3); }
+
+        /* ── EMERGENCY RING ── */
+        .panel.emergency-ring {
+            border: 2px solid var(--fire);
+            box-shadow: 0 0 0 0 rgba(239,68,68,0.4);
+            animation: ringPulse 1.5s infinite;
+        }
+        @keyframes ringPulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .navbar { padding: 0 1rem; }
+            .brand-sub { display: none; }
+            .main-content { padding: 1rem; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .metric-value { font-size: 1.8rem; }
+            .crop-panel { gap: 0.75rem; }
+            .phone-chip span:not(.edit-icon) { display: none; }
+            .phone-chip .show-num { display: none; }
+        }
+        @media (max-width: 480px) {
+            .metrics-grid { grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+            .metric-card { padding: 1rem; }
+            .metric-value { font-size: 1.6rem; }
+            .metric-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+            .save-crop-btn span { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4 sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">
-                <i class="fa-solid fa-leaf text-warning me-2"></i> 
-                <span data-lang="title">Smart Farm Dashboard</span>
-            </a>
-            <div class="d-flex align-items-center gap-3">
-                <div class="phone-display text-white d-none d-md-flex align-items-center" onclick="openPhoneModal()">
-                    <i class="fa-solid fa-phone me-2"></i> 
-                    <span id="mobile-number">Loading...</span>
-                    <i class="fa-solid fa-pen ms-3" style="font-size: 0.8rem; opacity: 0.8;"></i>
-                </div>
-                
-                <select id="lang-select" class="form-select form-select-sm shadow-sm" style="width: auto; border-radius: 8px;">
-                    <option value="en">English</option>
-                    <option value="hi">हिंदी (Hindi)</option>
-                    <option value="te">తెలుగు (Telugu)</option>
-                </select>
-            </div>
+<!-- NAVBAR -->
+<nav class="navbar">
+    <a href="#" class="navbar-brand">
+        <div class="brand-icon"><i class="fas fa-leaf"></i></div>
+        <div>
+            <div class="brand-text" data-lang="title">AquaAI Farm</div>
+            <div class="brand-sub">Smart Dashboard</div>
         </div>
-    </nav>
-
-    <div id="toast-container"></div>
-
-    <div class="container">
-        <div id="emergency-banner" class="alert alert-danger d-none text-center fw-bold alert-danger-pulse rounded-pill mb-4 shadow-sm" role="alert">
-            <i class="fa-solid fa-triangle-exclamation fa-fade me-2"></i> <span data-lang="emergencyAlert">EMERGENCY MODE ACTIVE! IMMEDIATE ACTION REQUIRED.</span>
+    </a>
+    <div class="nav-right">
+        <div class="phone-chip" onclick="openPhoneModal()">
+            <i class="fas fa-phone-alt" style="font-size:0.75rem;"></i>
+            <span class="show-num" id="mobile-number">Loading…</span>
+            <i class="fas fa-pen edit-icon"></i>
         </div>
+        <select id="lang-select" class="lang-select">
+            <option value="en">🇬🇧 EN</option>
+            <option value="hi">🇮🇳 हिं</option>
+            <option value="te">🌿 తె</option>
+        </select>
+    </div>
+</nav>
 
-        <div class="row">
-            <div class="col-md-6 col-lg-3">
-                <div class="card p-4 text-center">
-                    <div class="icon-circle bg-temp mx-auto"><i class="fa-solid fa-temperature-half"></i></div>
-                    <h5 class="metric-label" data-lang="temperature">Temperature</h5>
-                    <div class="value-text"><span id="val-temp">--</span>°C</div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card p-4 text-center">
-                    <div class="icon-circle bg-hum mx-auto"><i class="fa-solid fa-droplet"></i></div>
-                    <h5 class="metric-label" data-lang="humidity">Humidity</h5>
-                    <div class="value-text"><span id="val-hum">--</span>%</div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card p-4 text-center">
-                    <div class="icon-circle bg-soil mx-auto"><i class="fa-solid fa-seedling"></i></div>
-                    <h5 class="metric-label" data-lang="soilMoisture">Soil Moisture</h5>
-                    <div class="value-text"><span id="val-soil">--</span></div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card p-4 text-center">
-                    <div class="icon-circle bg-stat mx-auto"><i class="fa-solid fa-power-off"></i></div>
-                    <h5 class="metric-label" data-lang="pumpStatus">Pump Status</h5>
-                    <div class="mt-2"><span id="val-pump" class="badge bg-secondary fs-5 rounded-pill px-4 py-2">--</span></div>
-                </div>
-            </div>
+<!-- MAIN -->
+<div class="main-content">
+
+    <!-- Emergency Banner -->
+    <div id="emergency-banner" class="emergency-banner">
+        <i class="fas fa-triangle-exclamation fa-beat me-2"></i>
+        <span data-lang="emergencyAlert">⚠ EMERGENCY MODE ACTIVE — IMMEDIATE ACTION REQUIRED</span>
+    </div>
+
+    <!-- CROP SELECTOR -->
+    <div class="crop-panel">
+        <div class="crop-panel-label">
+            <i class="fas fa-seedling" style="color:var(--sage);"></i>
+            <span data-lang="selectCrop">Select Crop</span>
         </div>
-
-        <div class="row mt-2">
-            <div class="col-lg-6">
-                <div class="card p-4 h-100" id="security-card">
-                    <h4 class="card-header-title" data-lang="securityTitle">
-                        <i class="fa-solid fa-shield-halved text-danger me-2"></i> Security & Environment
-                    </h4>
-                    <ul class="list-group list-group-flush mt-2">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span data-lang="fireDetect"><i class="fa-solid fa-fire me-2 text-muted"></i> Fire Detected</span>
-                            <span id="val-fire" class="badge rounded-pill bg-success">Safe</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span data-lang="gasLevel"><i class="fa-solid fa-smog me-2 text-muted"></i> Gas Level</span>
-                            <span class="fw-bold fs-5"><span id="val-gas" class="text-primary">--</span> ppm</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span data-lang="motion"><i class="fa-solid fa-person-walking me-2 text-muted"></i> Motion</span>
-                            <span id="val-motion" class="badge rounded-pill bg-success">Clear</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span data-lang="sound"><i class="fa-solid fa-wave-square me-2 text-muted"></i> Sound</span>
-                            <span id="val-sound" class="badge rounded-pill bg-success">Quiet</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center border-bottom-0">
-                            <span data-lang="distance"><i class="fa-solid fa-ruler me-2 text-muted"></i> Ultrasonic Distance</span>
-                            <span class="fw-bold fs-5"><span id="val-dist" class="text-primary">--</span> cm</span>
-                        </li>
-                    </ul>
-                </div>
+        <div class="crop-select-wrapper">
+            <select id="crop-select" class="crop-select">
+                <option value="">— Choose a crop —</option>
+            </select>
+            <i class="fas fa-chevron-down crop-select-arrow"></i>
+        </div>
+        <button class="save-crop-btn" onclick="saveCropToFirebase()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span data-lang="saveCrop">Save to Farm</span>
+        </button>
+        <div id="crop-ideal-strip" class="crop-ideal-strip hidden">
+            <div class="ideal-pill">
+                <i class="pill-icon fas fa-thermometer-half" style="color:#f59e0b;"></i>
+                <span class="pill-label" data-lang="idealTemp">Ideal Temp</span>
+                <span id="ideal-temp" class="pill-val">—</span>°C
             </div>
-
-            <div class="col-lg-6">
-                <div class="card p-4 h-100">
-                    <h4 class="card-header-title" data-lang="systemTitle">
-                        <i class="fa-solid fa-microchip text-success me-2"></i> Hardware Status
-                    </h4>
-                    <div class="row text-center mt-4 align-items-center h-100 pb-4">
-                        <div class="col-6 border-end">
-                            <div class="p-3">
-                                <i id="icon-time" class="fa-solid fa-sun fa-4x text-warning mb-3 drop-shadow"></i>
-                                <h5 class="fw-bold" data-lang="timeMode">Time Mode</h5>
-                                <span id="val-night" class="badge bg-info text-dark rounded-pill px-3 py-2 mt-2">Day Time</span>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3">
-                                <i id="icon-horn" class="fa-solid fa-bullhorn fa-4x text-secondary mb-3"></i>
-                                <h5 class="fw-bold" data-lang="hornStatus">QRM Horn</h5>
-                                <span id="val-horn" class="badge bg-secondary rounded-pill px-3 py-2 mt-2">Off</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="ideal-pill">
+                <i class="pill-icon fas fa-tint" style="color:#0ea5e9;"></i>
+                <span class="pill-label" data-lang="idealSoil">Soil Moisture</span>
+                <span id="ideal-soil" class="pill-val">—</span>%
+            </div>
+            <div class="ideal-pill">
+                <i class="pill-icon fas fa-cloud" style="color:#64748b;"></i>
+                <span class="pill-label" data-lang="idealHum">Humidity</span>
+                <span id="ideal-hum" class="pill-val">—</span>%
+            </div>
+            <div class="ideal-pill season-pill">
+                <i class="pill-icon fas fa-calendar-alt" style="color:#f59e0b;"></i>
+                <span class="pill-label" data-lang="season">Season</span>
+                <span id="ideal-season" class="pill-val">—</span>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="phoneModal" tabindex="-1" aria-labelledby="phoneModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 15px; border: none;">
-                <div class="modal-header bg-light border-bottom-0">
-                    <h5 class="modal-title fw-bold" id="phoneModalLabel" data-lang="editPhoneTitle">
-                        <i class="fa-solid fa-phone text-success me-2"></i> Update Alert Number
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <label class="form-label text-muted mb-2" data-lang="enterPhoneDesc">Farmers will receive SMS/Calls on this number during emergencies.</label>
-                    <div class="input-group input-group-lg shadow-sm">
-                        <span class="input-group-text bg-white border-end-0 fw-bold text-success">+91</span>
-                        <input type="number" class="form-control border-start-0 ps-0" id="newPhoneInput" placeholder="Enter 10 digit number">
-                    </div>
-                    <div id="phoneError" class="text-danger mt-2 d-none" style="font-size: 0.9rem;">Please enter a valid 10-digit number.</div>
-                </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal" data-lang="cancel">Cancel</button>
-                    <button type="button" class="btn btn-success rounded-pill px-4" onclick="savePhoneNumber()" data-lang="saveBtn">Save Number</button>
-                </div>
+    <!-- METRIC CARDS -->
+    <div class="metrics-grid">
+        <div class="metric-card temp">
+            <div class="metric-header">
+                <div class="metric-icon temp"><i class="fas fa-thermometer-half"></i></div>
+                <div class="metric-status-dot"></div>
             </div>
+            <div class="metric-label" data-lang="temperature">Temperature</div>
+            <div class="metric-value"><span id="val-temp">--</span><span class="metric-unit">°C</span></div>
+            <div id="ideal-temp-hint" class="metric-ideal hidden"></div>
+        </div>
+        <div class="metric-card hum">
+            <div class="metric-header">
+                <div class="metric-icon hum"><i class="fas fa-droplet"></i></div>
+                <div class="metric-status-dot"></div>
+            </div>
+            <div class="metric-label" data-lang="humidity">Humidity</div>
+            <div class="metric-value"><span id="val-hum">--</span><span class="metric-unit">%</span></div>
+            <div id="ideal-hum-hint" class="metric-ideal hidden"></div>
+        </div>
+        <div class="metric-card soil">
+            <div class="metric-header">
+                <div class="metric-icon soil"><i class="fas fa-seedling"></i></div>
+                <div class="metric-status-dot"></div>
+            </div>
+            <div class="metric-label" data-lang="soilMoisture">Soil Moisture</div>
+            <div class="metric-value"><span id="val-soil">--</span></div>
+            <div id="ideal-soil-hint" class="metric-ideal hidden"></div>
+        </div>
+        <div class="metric-card pump">
+            <div class="metric-header">
+                <div class="metric-icon pump"><i class="fas fa-water"></i></div>
+                <div class="metric-status-dot"></div>
+            </div>
+            <div class="metric-label" data-lang="pumpStatus">Pump Status</div>
+            <div><span id="val-pump" class="pump-badge off">--</span></div>
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DETAIL PANELS -->
+    <div class="detail-grid">
 
-    <script>
-        // 1. FIREBASE CONFIGURATION (Using your provided keys)
-        const firebaseConfig = {
-            apiKey: "AIzaSyAOoJEMjcUwo0ouwY_e_nlM7snSOGDLXrs",
-            authDomain: "smartfarm-mech.firebaseapp.com",
-            databaseURL: "https://smartfarm-mech-default-rtdb.firebaseio.com",
-            projectId: "smartfarm-mech",
-            storageBucket: "smartfarm-mech.firebasestorage.app",
-            messagingSenderId: "125897786768",
-            appId: "1:125897786768:web:19a30e8988d6a5edc61f15",
-            measurementId: "G-H4D6YVE837"
-        };
+        <!-- Security Panel -->
+        <div class="panel" id="security-card">
+            <div class="panel-header">
+                <i class="fas fa-shield-halved" style="color:var(--fire);"></i>
+                <span class="panel-title" data-lang="securityTitle">Security & Environment</span>
+            </div>
+            <div class="panel-body">
+                <div class="sensor-row">
+                    <div class="sensor-label"><i class="fas fa-fire" style="color:#ef4444;"></i><span data-lang="fireDetect">Fire Detected</span></div>
+                    <span id="val-fire" class="badge safe"><i class="fas fa-check"></i> Safe</span>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-label"><i class="fas fa-smog" style="color:#64748b;"></i><span data-lang="gasLevel">Gas Level</span></div>
+                    <span class="sensor-val live-num"><span id="val-gas">--</span> ppm</span>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-label"><i class="fas fa-person-walking" style="color:#7c3aed;"></i><span data-lang="motion">Motion</span></div>
+                    <span id="val-motion" class="badge safe"><i class="fas fa-check"></i> Clear</span>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-label"><i class="fas fa-wave-square" style="color:#0ea5e9;"></i><span data-lang="sound">Sound</span></div>
+                    <span id="val-sound" class="badge safe"><i class="fas fa-check"></i> Quiet</span>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-label"><i class="fas fa-ruler" style="color:#64748b;"></i><span data-lang="distance">Distance</span></div>
+                    <span class="sensor-val live-num"><span id="val-dist">--</span> cm</span>
+                </div>
+            </div>
+        </div>
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        <!-- Hardware Status Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <i class="fas fa-microchip" style="color:var(--sage);"></i>
+                <span class="panel-title" data-lang="systemTitle">Hardware Status</span>
+            </div>
+            <div class="hw-grid">
+                <div class="hw-item">
+                    <i id="icon-time" class="fas fa-sun hw-icon sun"></i>
+                    <div class="hw-label" data-lang="timeMode">Time Mode</div>
+                    <span id="val-night" class="badge info">Day Time</span>
+                </div>
+                <div class="hw-item">
+                    <i id="icon-horn" class="fas fa-bullhorn hw-icon horn-off"></i>
+                    <div class="hw-label" data-lang="hornStatus">QRM Horn</div>
+                    <span id="val-horn" class="badge safe">Off</span>
+                </div>
+                <div class="hw-item" style="grid-column: 1/-1; border-bottom: none;">
+                    <div style="width:100%;">
+                        <div class="hw-label" style="text-align:left; margin-bottom:0.6rem;" data-lang="cropMonitoring">Active Crop</div>
+                        <div id="active-crop-display" style="font-family:'Syne',sans-serif; font-weight:700; font-size:1.05rem; color:var(--leaf);">
+                            — None Selected —
+                        </div>
+                        <div id="active-crop-category" style="font-size:0.78rem; color:var(--muted); margin-top:0.2rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        // 2. Multilingual Dictionary (Updated with modal text)
-        const translations = {
-            en: {
-                title: "Smart Farm Dashboard", temperature: "Temperature", humidity: "Humidity",
-                soilMoisture: "Soil Moisture", pumpStatus: "Pump Status", securityTitle: "Security & Environment",
-                fireDetect: "Fire Detected", gasLevel: "Gas Level", motion: "Motion Detected", sound: "Sound Detected",
-                distance: "Ultrasonic Distance", systemTitle: "Hardware Status", timeMode: "Time Mode",
-                hornStatus: "QRM Horn", emergencyAlert: "EMERGENCY MODE ACTIVE! IMMEDIATE ACTION REQUIRED.", safe: "Safe", alert: "Alert!",
-                clear: "Clear", quiet: "Quiet", active: "Active", off: "Off", on: "On", dayTime: "Day Time", nightTime: "Night Time",
-                editPhoneTitle: "Update Alert Number", enterPhoneDesc: "Farmer will receive SMS/Calls on this number during emergencies.", cancel: "Cancel", saveBtn: "Save Number"
-            },
-            hi: {
-                title: "स्मार्ट फार्म डैशबोर्ड", temperature: "तापमान", humidity: "नमी",
-                soilMoisture: "मिट्टी की नमी", pumpStatus: "पंप की स्थिति", securityTitle: "सुरक्षा और पर्यावरण",
-                fireDetect: "आग का पता चला", gasLevel: "गैस का स्तर", motion: "हलचल का पता चला", sound: "ध्वनि का पता चला",
-                distance: "अल्ट्रासोनिक दूरी", systemTitle: "हार्डवेयर स्थिति", timeMode: "समय मोड",
-                hornStatus: "अलार्म (QRM)", emergencyAlert: "आपातकालीन मोड सक्रिय! तुरंत कार्रवाई करें।", safe: "सुरक्षित", alert: "खतरा!",
-                clear: "स्पष्ट", quiet: "शांत", active: "सक्रिय", off: "बंद", on: "चालू", dayTime: "दिन का समय", nightTime: "रात का समय",
-                editPhoneTitle: "अलर्ट नंबर अपडेट करें", enterPhoneDesc: "आपात स्थिति के दौरान किसान को इस नंबर पर एसएमएस/कॉल प्राप्त होंगे।", cancel: "रद्द करें", saveBtn: "नंबर सेव करें"
-            },
-            te: {
-                title: "స్మార్ట్ ఫార్మ్ డాష్‌బోర్డ్", temperature: "ఉష్ణోగ్రత", humidity: "తేమ",
-                soilMoisture: "నేల తేమ", pumpStatus: "పంప్ స్థితి", securityTitle: "భద్రత మరియు పర్యావరణం",
-                fireDetect: "అగ్ని ప్రమాదం", gasLevel: "గ్యాస్ స్థాయి", motion: "కదలిక గుర్తింపు", sound: "శబ్దం గుర్తింపు",
-                distance: "దూరం (అల్ట్రాసోనిక్)", systemTitle: "హార్డ్‌వేర్ స్థితి", timeMode: "సమయం",
-                hornStatus: "అలారం (QRM)", emergencyAlert: "అత్యవసర మోడ్ యాక్టివ్! తక్షణ చర్య అవసరం.", safe: "సురక్షితం", alert: "ప్రమాదం!",
-                clear: "క్లియర్", quiet: "నిశ్శబ్దం", active: "యాక్టివ్", off: "ఆఫ్", on: "ఆన్", dayTime: "పగలు", nightTime: "రాత్రి",
-                editPhoneTitle: "అలర్ట్ నంబర్‌ను నవీకరించండి", enterPhoneDesc: "అత్యవసర సమయాల్లో రైతు ఈ నంబర్‌కు SMS/కాల్స్ అందుకుంటారు.", cancel: "రద్దు చేయి", saveBtn: "నంబర్‌ను సేవ్ చేయండి"
-            }
-        };
+    </div>
+</div>
 
-        let currentLang = 'en';
-        let rawPhoneNumber = "";
+<!-- Toast Container -->
+<div id="toast-container"></div>
 
-        // Language Logic
-        function updateLanguage() {
-            currentLang = document.getElementById('lang-select').value;
-            document.querySelectorAll('[data-lang]').forEach(el => {
-                const key = el.getAttribute('data-lang');
-                if (translations[currentLang][key]) {
-                    el.innerText = translations[currentLang][key];
-                }
-            });
-            if(lastData) updateUI(lastData);
-        }
-        document.getElementById('lang-select').addEventListener('change', updateLanguage);
+<!-- Phone Modal -->
+<div id="phone-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-head">
+            <span class="modal-head-title" data-lang="editPhoneTitle"><i class="fas fa-phone me-2"></i> Update Alert Number</span>
+            <button class="modal-close" onclick="closePhoneModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-label" data-lang="enterPhoneDesc">Farmer will receive SMS/Calls on this number during emergencies.</div>
+            <div class="phone-input-group">
+                <div class="phone-prefix">+91</div>
+                <input type="number" id="newPhoneInput" class="phone-input" placeholder="10-digit number">
+            </div>
+            <div id="phoneError" class="phone-error">Please enter a valid 10-digit number.</div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn-cancel" onclick="closePhoneModal()" data-lang="cancel">Cancel</button>
+            <button class="btn-save" onclick="savePhoneNumber()" data-lang="saveBtn">Save Number</button>
+        </div>
+    </div>
+</div>
 
-        // 3. Real-time Firebase Listener
-        let lastData = null;
-        let activeAlerts = new Set();
-        let phoneModalInstance = new bootstrap.Modal(document.getElementById('phoneModal'));
+<script>
+// ── CROP DATA from Excel ──
+const CROP_DATA = {"Rice (Paddy)":{"category":"Cereal","idealTemperature":"22–35","soilMoisture":"70–90","humidity":"70–90","season":"Kharif"},"Wheat":{"category":"Cereal","idealTemperature":"15–25","soilMoisture":"40–60","humidity":"40–60","season":"Rabi"},"Maize":{"category":"Cereal","idealTemperature":"18–32","soilMoisture":"50–70","humidity":"50–70","season":"Kharif/Rabi"},"Barley":{"category":"Cereal","idealTemperature":"12–25","soilMoisture":"40–60","humidity":"40–60","season":"Rabi"},"Sorghum (Jowar)":{"category":"Cereal","idealTemperature":"26–34","soilMoisture":"40–60","humidity":"40–60","season":"Kharif"},"Pearl Millet (Bajra)":{"category":"Cereal","idealTemperature":"25–35","soilMoisture":"30–50","humidity":"40–60","season":"Kharif"},"Finger Millet (Ragi)":{"category":"Cereal","idealTemperature":"20–30","soilMoisture":"50–70","humidity":"50–70","season":"Kharif"},"Foxtail Millet":{"category":"Cereal","idealTemperature":"25–35","soilMoisture":"30–50","humidity":"40–60","season":"Kharif"},"Little Millet":{"category":"Cereal","idealTemperature":"25–35","soilMoisture":"30–50","humidity":"40–60","season":"Kharif"},"Kodo Millet":{"category":"Cereal","idealTemperature":"25–35","soilMoisture":"30–50","humidity":"40–60","season":"Kharif"},"Barnyard Millet":{"category":"Cereal","idealTemperature":"25–35","soilMoisture":"30–50","humidity":"40–60","season":"Kharif"},"Proso Millet":{"category":"Cereal","idealTemperature":"25–35","soilMoisture":"30–50","humidity":"40–60","season":"Kharif"},"Green Gram (Moong)":{"category":"Pulse","idealTemperature":"25–35","soilMoisture":"40–60","humidity":"50–60","season":"Kharif"},"Black Gram (Urad)":{"category":"Pulse","idealTemperature":"25–35","soilMoisture":"40–60","humidity":"50–60","season":"Kharif"},"Chickpea (Gram)":{"category":"Pulse","idealTemperature":"20–25","soilMoisture":"30–50","humidity":"40–50","season":"Rabi"},"Pigeon Pea (Tur)":{"category":"Pulse","idealTemperature":"20–35","soilMoisture":"40–60","humidity":"50–70","season":"Kharif"},"Lentil (Masoor)":{"category":"Pulse","idealTemperature":"18–25","soilMoisture":"40–60","humidity":"50–60","season":"Rabi"},"Cowpea":{"category":"Pulse","idealTemperature":"20–30","soilMoisture":"40–60","humidity":"50–60","season":"Kharif"},"Field Pea":{"category":"Pulse","idealTemperature":"15–25","soilMoisture":"40–60","humidity":"50–60","season":"Rabi"},"Horse Gram":{"category":"Pulse","idealTemperature":"20–30","soilMoisture":"30–50","humidity":"40–50","season":"Kharif"},"Moth Bean":{"category":"Pulse","idealTemperature":"25–35","soilMoisture":"30–50","humidity":"40–50","season":"Kharif"},"Rajma (Kidney Bean)":{"category":"Pulse","idealTemperature":"15–25","soilMoisture":"50–70","humidity":"50–60","season":"Rabi"},"Cluster Bean (Guar)":{"category":"Pulse","idealTemperature":"25–35","soilMoisture":"30–50","humidity":"40–60","season":"Kharif"},"Groundnut":{"category":"Oilseed","idealTemperature":"20–30","soilMoisture":"40–60","humidity":"50–60","season":"Kharif"},"Mustard":{"category":"Oilseed","idealTemperature":"10–25","soilMoisture":"30–50","humidity":"40–60","season":"Rabi"},"Sunflower":{"category":"Oilseed","idealTemperature":"20–30","soilMoisture":"40–60","humidity":"50–60","season":"Rabi/Kharif"},"Soybean":{"category":"Oilseed","idealTemperature":"20–30","soilMoisture":"50–70","humidity":"60–70","season":"Kharif"},"Sesame":{"category":"Oilseed","idealTemperature":"25–35","soilMoisture":"30–50","humidity":"40–60","season":"Kharif"},"Linseed":{"category":"Oilseed","idealTemperature":"15–25","soilMoisture":"30–50","humidity":"40–60","season":"Rabi"},"Castor":{"category":"Oilseed","idealTemperature":"20–30","soilMoisture":"40–60","humidity":"50–60","season":"Kharif"},"Safflower":{"category":"Oilseed","idealTemperature":"20–30","soilMoisture":"30–50","humidity":"40–50","season":"Rabi"},"Niger Seed":{"category":"Oilseed","idealTemperature":"20–30","soilMoisture":"30–50","humidity":"40–50","season":"Kharif"},"Sugarcane":{"category":"Cash Crop","idealTemperature":"21–32","soilMoisture":"60–80","humidity":"60–80","season":"Annual"},"Cotton":{"category":"Cash Crop","idealTemperature":"21–30","soilMoisture":"40–60","humidity":"50–60","season":"Kharif"},"Jute":{"category":"Cash Crop","idealTemperature":"24–35","soilMoisture":"60–80","humidity":"70–90","season":"Kharif"},"Tobacco":{"category":"Cash Crop","idealTemperature":"20–30","soilMoisture":"40–60","humidity":"50–60","season":"Rabi"},"Rubber":{"category":"Cash Crop","idealTemperature":"25–35","soilMoisture":"70–90","humidity":"80–90","season":"Perennial"},"Tea":{"category":"Plantation","idealTemperature":"18–30","soilMoisture":"70–90","humidity":"70–90","season":"Perennial"},"Coffee":{"category":"Plantation","idealTemperature":"18–28","soilMoisture":"60–80","humidity":"70–85","season":"Perennial"},"Coconut":{"category":"Plantation","idealTemperature":"25–32","soilMoisture":"60–80","humidity":"70–90","season":"Perennial"},"Arecanut":{"category":"Plantation","idealTemperature":"20–35","soilMoisture":"60–80","humidity":"70–90","season":"Perennial"},"Cocoa":{"category":"Plantation","idealTemperature":"21–32","soilMoisture":"60–80","humidity":"70–90","season":"Perennial"},"Tomato":{"category":"Vegetable","idealTemperature":"18–30","soilMoisture":"60–80","humidity":"60–70","season":"All"},"Potato":{"category":"Vegetable","idealTemperature":"15–25","soilMoisture":"60–80","humidity":"70–80","season":"Rabi"},"Onion":{"category":"Vegetable","idealTemperature":"13–24","soilMoisture":"50–70","humidity":"60–70","season":"Rabi"},"Garlic":{"category":"Vegetable","idealTemperature":"12–25","soilMoisture":"50–70","humidity":"60–70","season":"Rabi"},"Brinjal":{"category":"Vegetable","idealTemperature":"20–30","soilMoisture":"60–80","humidity":"60–70","season":"All"},"Chilli":{"category":"Vegetable","idealTemperature":"20–30","soilMoisture":"50–70","humidity":"60–70","season":"All"},"Cabbage":{"category":"Vegetable","idealTemperature":"15–20","soilMoisture":"60–80","humidity":"70–80","season":"Rabi"},"Cauliflower":{"category":"Vegetable","idealTemperature":"15–20","soilMoisture":"60–80","humidity":"70–80","season":"Rabi"},"Okra":{"category":"Vegetable","idealTemperature":"20–35","soilMoisture":"50–70","humidity":"60–70","season":"Kharif"},"Cucumber":{"category":"Vegetable","idealTemperature":"20–30","soilMoisture":"60–80","humidity":"70–80","season":"Zaid"},"Pumpkin":{"category":"Vegetable","idealTemperature":"20–30","soilMoisture":"60–80","humidity":"70–80","season":"Zaid"},"Bottle Gourd":{"category":"Vegetable","idealTemperature":"20–30","soilMoisture":"60–80","humidity":"70–80","season":"Zaid"},"Bitter Gourd":{"category":"Vegetable","idealTemperature":"24–30","soilMoisture":"60–80","humidity":"70–80","season":"Zaid"},"Ridge Gourd":{"category":"Vegetable","idealTemperature":"24–30","soilMoisture":"60–80","humidity":"70–80","season":"Zaid"},"Spinach":{"category":"Vegetable","idealTemperature":"15–25","soilMoisture":"60–80","humidity":"70–80","season":"Rabi"},"Carrot":{"category":"Vegetable","idealTemperature":"15–25","soilMoisture":"60–70","humidity":"60–70","season":"Rabi"},"Radish":{"category":"Vegetable","idealTemperature":"10–25","soilMoisture":"60–70","humidity":"60–70","season":"Rabi"},"Beetroot":{"category":"Vegetable","idealTemperature":"15–25","soilMoisture":"60–70","humidity":"60–70","season":"Rabi"},"Peas":{"category":"Vegetable","idealTemperature":"15–25","soilMoisture":"50–70","humidity":"60–70","season":"Rabi"},"Mango":{"category":"Fruit","idealTemperature":"24–30","soilMoisture":"40–60","humidity":"50–70","season":"Perennial"},"Banana":{"category":"Fruit","idealTemperature":"25–35","soilMoisture":"70–90","humidity":"70–90","season":"Perennial"},"Papaya":{"category":"Fruit","idealTemperature":"22–30","soilMoisture":"60–80","humidity":"60–70","season":"Perennial"},"Guava":{"category":"Fruit","idealTemperature":"20–30","soilMoisture":"50–70","humidity":"50–70","season":"Perennial"},"Pomegranate":{"category":"Fruit","idealTemperature":"25–35","soilMoisture":"40–60","humidity":"40–60","season":"Perennial"},"Apple":{"category":"Fruit","idealTemperature":"10–24","soilMoisture":"50–70","humidity":"60–70","season":"Perennial"},"Grapes":{"category":"Fruit","idealTemperature":"15–30","soilMoisture":"50–70","humidity":"50–60","season":"Perennial"},"Orange":{"category":"Fruit","idealTemperature":"15–30","soilMoisture":"50–70","humidity":"50–70","season":"Perennial"},"Lemon":{"category":"Fruit","idealTemperature":"20–30","soilMoisture":"50–70","humidity":"50–70","season":"Perennial"},"Sapota (Chikoo)":{"category":"Fruit","idealTemperature":"25–35","soilMoisture":"60–80","humidity":"60–80","season":"Perennial"},"Custard Apple":{"category":"Fruit","idealTemperature":"25–35","soilMoisture":"40–60","humidity":"50–60","season":"Perennial"},"Pineapple":{"category":"Fruit","idealTemperature":"22–32","soilMoisture":"60–80","humidity":"70–90","season":"Perennial"},"Watermelon":{"category":"Fruit","idealTemperature":"24–35","soilMoisture":"60–80","humidity":"60–70","season":"Zaid"},"Muskmelon":{"category":"Fruit","idealTemperature":"24–35","soilMoisture":"60–80","humidity":"60–70","season":"Zaid"}};
 
-        db.ref('/').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if(data) {
-                lastData = data;
-                updateUI(data);
-            }
+const CATEGORIES = ["Cereal","Pulse","Oilseed","Cash Crop","Plantation","Vegetable","Fruit"];
+
+// ── TRANSLATIONS ──
+const T = {
+    en: { title:"AquaAI Farm", temperature:"Temperature", humidity:"Humidity", soilMoisture:"Soil Moisture", pumpStatus:"Pump Status", securityTitle:"Security & Environment", fireDetect:"Fire Detected", gasLevel:"Gas Level", motion:"Motion", sound:"Sound", distance:"Distance", systemTitle:"Hardware Status", timeMode:"Time Mode", hornStatus:"QRM Horn", emergencyAlert:"⚠ EMERGENCY MODE ACTIVE — IMMEDIATE ACTION REQUIRED", safe:"Safe", alert:"Alert!", clear:"Clear", quiet:"Quiet", active:"Active", off:"Off", on:"On", dayTime:"Day Time", nightTime:"Night Time", editPhoneTitle:"Update Alert Number", enterPhoneDesc:"Farmer will receive SMS/Calls on this number during emergencies.", cancel:"Cancel", saveBtn:"Save Number", selectCrop:"Select Crop", saveCrop:"Save to Farm", idealTemp:"Ideal Temp", idealSoil:"Soil Moisture", idealHum:"Humidity", season:"Season", cropMonitoring:"Active Crop", idealRange:"Ideal Range" },
+    hi: { title:"एक्वाAI फार्म", temperature:"तापमान", humidity:"नमी", soilMoisture:"मिट्टी नमी", pumpStatus:"पंप स्थिति", securityTitle:"सुरक्षा एवं पर्यावरण", fireDetect:"आग", gasLevel:"गैस स्तर", motion:"हलचल", sound:"ध्वनि", distance:"दूरी", systemTitle:"हार्डवेयर स्थिति", timeMode:"समय मोड", hornStatus:"अलार्म (QRM)", emergencyAlert:"⚠ आपात मोड सक्रिय — तुरंत कार्रवाई करें", safe:"सुरक्षित", alert:"खतरा!", clear:"स्पष्ट", quiet:"शांत", active:"सक्रिय", off:"बंद", on:"चालू", dayTime:"दिन", nightTime:"रात", editPhoneTitle:"अलर्ट नंबर अपडेट", enterPhoneDesc:"आपात स्थिति में किसान को इस नंबर पर SMS/कॉल मिलेगी।", cancel:"रद्द", saveBtn:"नंबर सेव", selectCrop:"फसल चुनें", saveCrop:"फार्म में सेव", idealTemp:"आदर्श तापमान", idealSoil:"मिट्टी नमी", idealHum:"नमी", season:"मौसम", cropMonitoring:"सक्रिय फसल", idealRange:"आदर्श सीमा" },
+    te: { title:"అక్వాAI ఫార్మ్", temperature:"ఉష్ణోగ్రత", humidity:"తేమ", soilMoisture:"నేల తేమ", pumpStatus:"పంప్ స్థితి", securityTitle:"భద్రత & పర్యావరణం", fireDetect:"అగ్ని", gasLevel:"గ్యాస్ స్థాయి", motion:"కదలిక", sound:"శబ్దం", distance:"దూరం", systemTitle:"హార్డ్‌వేర్ స్థితి", timeMode:"సమయం", hornStatus:"అలారం (QRM)", emergencyAlert:"⚠ అత్యవసర మోడ్ — తక్షణ చర్య అవసరం", safe:"సురక్షితం", alert:"ప్రమాదం!", clear:"క్లియర్", quiet:"నిశ్శబ్దం", active:"యాక్టివ్", off:"ఆఫ్", on:"ఆన్", dayTime:"పగలు", nightTime:"రాత్రి", editPhoneTitle:"అలర్ట్ నంబర్ నవీకరించు", enterPhoneDesc:"అత్యవసర సమయాల్లో రైతు ఈ నంబర్‌కు SMS/కాల్ అందుకుంటారు.", cancel:"రద్దు", saveBtn:"నంబర్ సేవ్", selectCrop:"పంట ఎంచుకో", saveCrop:"ఫార్మ్‌లో సేవ్ చేయి", idealTemp:"ఆదర్శ ఉష్ణోగ్రత", idealSoil:"నేల తేమ", idealHum:"తేమ", season:"సీజన్", cropMonitoring:"యాక్టివ్ పంట", idealRange:"ఆదర్శ పరిమితి" }
+};
+
+// ── FIREBASE INIT ──
+const firebaseConfig = {
+    apiKey: "AIzaSyAOoJEMjcUwo0ouwY_e_nlM7snSOGDLXrs",
+    authDomain: "smartfarm-mech.firebaseapp.com",
+    databaseURL: "https://smartfarm-mech-default-rtdb.firebaseio.com",
+    projectId: "smartfarm-mech",
+    storageBucket: "smartfarm-mech.firebasestorage.app",
+    messagingSenderId: "125897786768",
+    appId: "1:125897786768:web:19a30e8988d6a5edc61f15"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let currentLang = 'en';
+let lastData = null;
+let rawPhone = '';
+let activeToasts = new Set();
+let selectedCropName = '';
+
+// ── BUILD CROP DROPDOWN ──
+function buildCropDropdown() {
+    const sel = document.getElementById('crop-select');
+    CATEGORIES.forEach(cat => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = cat;
+        const crops = Object.keys(CROP_DATA).filter(c => CROP_DATA[c].category === cat);
+        crops.forEach(crop => {
+            const opt = document.createElement('option');
+            opt.value = crop;
+            opt.textContent = crop;
+            optgroup.appendChild(opt);
         });
+        sel.appendChild(optgroup);
+    });
 
-        // Phone Number Modal Logic
-        function openPhoneModal() {
-            document.getElementById('newPhoneInput').value = rawPhoneNumber;
-            document.getElementById('phoneError').classList.add('d-none');
-            phoneModalInstance.show();
+    sel.addEventListener('change', () => {
+        selectedCropName = sel.value;
+        if (selectedCropName && CROP_DATA[selectedCropName]) {
+            const c = CROP_DATA[selectedCropName];
+            document.getElementById('ideal-temp').textContent = c.idealTemperature;
+            document.getElementById('ideal-soil').textContent = c.soilMoisture;
+            document.getElementById('ideal-hum').textContent = c.humidity;
+            document.getElementById('ideal-season').textContent = c.season;
+            document.getElementById('crop-ideal-strip').classList.remove('hidden');
+            updateMetricIdealHints(c);
+        } else {
+            document.getElementById('crop-ideal-strip').classList.add('hidden');
+            clearMetricIdealHints();
         }
+    });
+}
 
-        function savePhoneNumber() {
-            const inputVal = document.getElementById('newPhoneInput').value.trim();
-            const errorText = document.getElementById('phoneError');
-            
-            // Basic validation for 10 digits
-            if(inputVal.length === 10 && !isNaN(inputVal)) {
-                errorText.classList.add('d-none');
-                
-                // Save to Firebase (Saving as Number to match your existing JSON structure)
-                db.ref('mobile').set(Number(inputVal))
-                    .then(() => {
-                        phoneModalInstance.hide();
-                        triggerToast("Phone Number Updated Successfully!", "bg-success text-white");
-                    })
-                    .catch((error) => {
-                        triggerToast("Error updating number: " + error.message, "bg-danger text-white");
-                    });
-            } else {
-                errorText.classList.remove('d-none');
-            }
+function updateMetricIdealHints(c) {
+    const t = T[currentLang];
+    const hints = [
+        { id: 'ideal-temp-hint', val: c.idealTemperature, suffix: '°C' },
+        { id: 'ideal-hum-hint', val: c.humidity, suffix: '%' },
+        { id: 'ideal-soil-hint', val: c.soilMoisture, suffix: '%' },
+    ];
+    hints.forEach(h => {
+        const el = document.getElementById(h.id);
+        el.textContent = `${t.idealRange}: ${h.val}${h.suffix}`;
+        el.classList.remove('hidden');
+    });
+}
+
+function clearMetricIdealHints() {
+    ['ideal-temp-hint','ideal-hum-hint','ideal-soil-hint'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+    });
+}
+
+// ── SAVE CROP TO FIREBASE ──
+function saveCropToFirebase() {
+    const cropName = document.getElementById('crop-select').value;
+    if (!cropName) { showToast('Please select a crop first.', 'warning'); return; }
+    const c = CROP_DATA[cropName];
+    const cropPayload = {
+        name: cropName,
+        category: c.category,
+        idealTemperature: c.idealTemperature,
+        soilMoisture: c.soilMoisture,
+        humidity: c.humidity,
+        season: c.season
+    };
+    db.ref('crop').set(cropPayload)
+        .then(() => {
+            showToast(`✓ ${cropName} saved to farm!`, 'success');
+            document.getElementById('active-crop-display').textContent = cropName;
+            document.getElementById('active-crop-category').textContent = c.category + ' · ' + c.season;
+        })
+        .catch(err => showToast('Firebase error: ' + err.message, 'danger'));
+}
+
+// ── LANGUAGE ──
+function updateLanguage() {
+    currentLang = document.getElementById('lang-select').value;
+    const t = T[currentLang];
+    document.querySelectorAll('[data-lang]').forEach(el => {
+        const key = el.getAttribute('data-lang');
+        if (t[key]) el.textContent = t[key];
+    });
+    if (lastData) updateUI(lastData);
+}
+document.getElementById('lang-select').addEventListener('change', updateLanguage);
+
+// ── FIREBASE LISTENER ──
+db.ref('/').on('value', snap => {
+    const d = snap.val();
+    if (d) { lastData = d; updateUI(d); }
+});
+
+// Also load saved crop from firebase on start
+db.ref('crop').once('value', snap => {
+    const c = snap.val();
+    if (c && c.name) {
+        document.getElementById('active-crop-display').textContent = c.name;
+        document.getElementById('active-crop-category').textContent = (c.category || '') + (c.season ? ' · ' + c.season : '');
+        // Pre-select in dropdown
+        const sel = document.getElementById('crop-select');
+        sel.value = c.name;
+        if (CROP_DATA[c.name]) {
+            document.getElementById('ideal-temp').textContent = CROP_DATA[c.name].idealTemperature;
+            document.getElementById('ideal-soil').textContent = CROP_DATA[c.name].soilMoisture;
+            document.getElementById('ideal-hum').textContent = CROP_DATA[c.name].humidity;
+            document.getElementById('ideal-season').textContent = CROP_DATA[c.name].season;
+            document.getElementById('crop-ideal-strip').classList.remove('hidden');
+            updateMetricIdealHints(CROP_DATA[c.name]);
         }
+        selectedCropName = c.name;
+    }
+});
 
-        // Main UI Update Function
-        function updateUI(data) {
-            const t = translations[currentLang];
-            
-            // Format & Display Mobile Number
-            rawPhoneNumber = data.mobile.toString();
-            document.getElementById('mobile-number').innerText = "+91 " + rawPhoneNumber;
+// ── MAIN UI UPDATE ──
+function updateUI(data) {
+    const t = T[currentLang];
 
-            // Climate & Soil
-            document.getElementById('val-temp').innerText = data.farmData.climate.temperature;
-            document.getElementById('val-hum').innerText = data.farmData.climate.humidity;
-            document.getElementById('val-soil').innerText = data.farmData.soil.moisture;
+    // Phone
+    if (data.mobile) {
+        rawPhone = data.mobile.toString();
+        document.getElementById('mobile-number').textContent = '+91 ' + rawPhone;
+    }
 
-            // Pump
-            const pumpEl = document.getElementById('val-pump');
-            if(data.farmData.status.pumpActive > 0) {
-                pumpEl.innerText = t.on;
-                pumpEl.className = "badge bg-success shadow-sm rounded-pill px-4 py-2";
-            } else {
-                pumpEl.innerText = t.off;
-                pumpEl.className = "badge bg-secondary shadow-sm rounded-pill px-4 py-2";
-            }
+    // Metrics
+    const farm = data.farmData;
+    document.getElementById('val-temp').textContent = farm.climate.temperature;
+    document.getElementById('val-hum').textContent = farm.climate.humidity;
+    document.getElementById('val-soil').textContent = farm.soil.moisture;
 
-            // Security Badges
-            updateBadge('val-fire', data.farmData.security.fireDetected, t.alert, t.safe, true);
-            document.getElementById('val-gas').innerText = data.farmData.security.gasValue;
-            updateBadge('val-motion', data.farmData.security.motionDetected, t.alert, t.clear, false);
-            updateBadge('val-sound', data.farmData.security.soundDetected, t.alert, t.quiet, false);
-            document.getElementById('val-dist').innerText = data.farmData.security.ultrasonicDistance;
+    // Pump
+    const pumpEl = document.getElementById('val-pump');
+    if (farm.status.pumpActive > 0) {
+        pumpEl.textContent = t.on; pumpEl.className = 'pump-badge on';
+    } else {
+        pumpEl.textContent = t.off; pumpEl.className = 'pump-badge off';
+    }
 
-            // Gas Alert Logic
-            if(data.farmData.security.gasValue > 1000) triggerToast("High Gas Level Detected!", "bg-warning text-dark");
+    // Security
+    updateBadge('val-fire', farm.security.fireDetected, t.alert, t.safe, true);
+    document.getElementById('val-gas').textContent = farm.security.gasValue;
+    updateBadge('val-motion', farm.security.motionDetected, t.active, t.clear, false);
+    updateBadge('val-sound', farm.security.soundDetected, t.active, t.quiet, false);
+    document.getElementById('val-dist').textContent = farm.security.ultrasonicDistance;
 
-            // Emergency State Logic
-            const banner = document.getElementById('emergency-banner');
-            const secCard = document.getElementById('security-card');
-            
-            if(data.farmData.status.emergencyMode || data.farmData.security.fireDetected) {
-                banner.classList.remove('d-none');
-                secCard.classList.add('alert-danger-pulse');
-                triggerToast("EMERGENCY! Check Farm Immediately.", "bg-danger text-white");
-            } else {
-                banner.classList.add('d-none');
-                secCard.classList.remove('alert-danger-pulse');
-            }
+    if (farm.security.gasValue > 1000) showToast('High Gas Level Detected!', 'warning');
 
-            // Time Mode
-            const nightBadge = document.getElementById('val-night');
-            const timeIcon = document.getElementById('icon-time');
-            if(data.farmData.status.isNightTime) {
-                nightBadge.innerText = t.nightTime;
-                nightBadge.className = "badge bg-dark rounded-pill px-3 py-2 mt-2 shadow-sm";
-                timeIcon.className = "fa-solid fa-moon fa-4x text-secondary mb-3";
-            } else {
-                nightBadge.innerText = t.dayTime;
-                nightBadge.className = "badge bg-info text-dark rounded-pill px-3 py-2 mt-2 shadow-sm";
-                timeIcon.className = "fa-solid fa-sun fa-4x text-warning mb-3";
-            }
+    // Emergency
+    const banner = document.getElementById('emergency-banner');
+    const secCard = document.getElementById('security-card');
+    if (farm.status.emergencyMode || farm.security.fireDetected) {
+        banner.classList.add('active');
+        secCard.classList.add('emergency-ring');
+        showToast('EMERGENCY! Check Farm Immediately.', 'danger');
+    } else {
+        banner.classList.remove('active');
+        secCard.classList.remove('emergency-ring');
+    }
 
-            // Horn Status
-            updateBadge('val-horn', data.farmData.status.qrmHornActive, t.on, t.off, false);
-            document.getElementById('icon-horn').className = data.farmData.status.qrmHornActive 
-                ? "fa-solid fa-bullhorn fa-4x text-danger mb-3 fa-shake" 
-                : "fa-solid fa-bullhorn fa-4x text-secondary mb-3";
-        }
+    // Time mode
+    const nightBadge = document.getElementById('val-night');
+    const timeIcon = document.getElementById('icon-time');
+    if (farm.status.isNightTime) {
+        nightBadge.textContent = t.nightTime; nightBadge.className = 'badge dark';
+        timeIcon.className = 'fas fa-moon hw-icon moon';
+    } else {
+        nightBadge.textContent = t.dayTime; nightBadge.className = 'badge info';
+        timeIcon.className = 'fas fa-sun hw-icon sun';
+    }
 
-        // Helper: Badge Updater
-        function updateBadge(id, isTrue, trueText, falseText, isCritical) {
-            const el = document.getElementById(id);
-            if(isTrue) {
-                el.innerText = trueText;
-                el.className = isCritical 
-                    ? "badge rounded-pill bg-danger shadow-sm alert-danger-pulse px-3 py-2" 
-                    : "badge rounded-pill bg-warning text-dark shadow-sm px-3 py-2";
-            } else {
-                el.innerText = falseText;
-                el.className = "badge rounded-pill bg-success shadow-sm px-3 py-2";
-            }
-        }
+    // Horn
+    const hornBadge = document.getElementById('val-horn');
+    const hornIcon = document.getElementById('icon-horn');
+    if (farm.status.qrmHornActive) {
+        hornBadge.textContent = t.on; hornBadge.className = 'badge danger';
+        hornIcon.className = 'fas fa-bullhorn hw-icon horn-on';
+    } else {
+        hornBadge.textContent = t.off; hornBadge.className = 'badge safe';
+        hornIcon.className = 'fas fa-bullhorn hw-icon horn-off';
+    }
+}
 
-        // Helper: Toast Notifications
-        function triggerToast(message, colorClass) {
-            if(activeAlerts.has(message)) return;
+function updateBadge(id, isTrue, trueText, falseText, isCritical) {
+    const el = document.getElementById(id);
+    if (isTrue) {
+        el.innerHTML = `<i class="fas fa-triangle-exclamation"></i> ${trueText}`;
+        el.className = isCritical ? 'badge danger' : 'badge warn';
+    } else {
+        el.innerHTML = `<i class="fas fa-check"></i> ${falseText}`;
+        el.className = 'badge safe';
+    }
+}
 
-            activeAlerts.add(message);
-            const toastId = 'toast-' + Date.now();
-            const toastHTML = `
-                <div id="${toastId}" class="toast align-items-center ${colorClass} border-0 mb-3 shadow-lg rounded-4" role="alert" aria-live="assertive" aria-atomic="true">
-                  <div class="d-flex p-1">
-                    <div class="toast-body fw-bold fs-6">
-                      <i class="fa-solid fa-circle-exclamation me-2 fs-5 align-middle"></i> ${message}
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                  </div>
-                </div>
-            `;
-            document.getElementById('toast-container').insertAdjacentHTML('beforeend', toastHTML);
-            
-            const toastEl = document.getElementById(toastId);
-            const toast = new bootstrap.Toast(toastEl, { delay: 6000 });
-            toast.show();
+// ── PHONE MODAL ──
+function openPhoneModal() {
+    document.getElementById('newPhoneInput').value = rawPhone;
+    document.getElementById('phoneError').style.display = 'none';
+    document.getElementById('phone-modal').classList.add('open');
+}
+function closePhoneModal() {
+    document.getElementById('phone-modal').classList.remove('open');
+}
+document.getElementById('phone-modal').addEventListener('click', function(e) {
+    if (e.target === this) closePhoneModal();
+});
 
-            toastEl.addEventListener('hidden.bs.toast', () => {
-                toastEl.remove();
-                activeAlerts.delete(message);
-            });
-        }
+function savePhoneNumber() {
+    const val = document.getElementById('newPhoneInput').value.trim();
+    const err = document.getElementById('phoneError');
+    if (val.length === 10 && !isNaN(val)) {
+        err.style.display = 'none';
+        db.ref('mobile').set(Number(val))
+            .then(() => { closePhoneModal(); showToast('Phone number updated!', 'success'); })
+            .catch(e => showToast('Error: ' + e.message, 'danger'));
+    } else {
+        err.style.display = 'block';
+    }
+}
 
-        // Init
-        updateLanguage();
-    </script>
+// ── TOASTS ──
+function showToast(msg, type) {
+    if (activeToasts.has(msg)) return;
+    activeToasts.add(msg);
+    const id = 'toast-' + Date.now();
+    const icons = { success:'fa-circle-check', danger:'fa-triangle-exclamation', warning:'fa-bell', info:'fa-circle-info' };
+    const el = document.createElement('div');
+    el.id = id;
+    el.className = `toast-item ${type}`;
+    el.innerHTML = `<i class="fas ${icons[type]||'fa-circle-info'}"></i> ${msg}`;
+    el.onclick = () => { el.remove(); activeToasts.delete(msg); };
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => { el.remove(); activeToasts.delete(msg); }, 6000);
+}
+
+// ── INIT ──
+buildCropDropdown();
+updateLanguage();
+</script>
 </body>
 </html>
